@@ -7,4 +7,4 @@ RUN apt-get update && apt-get install -y curl wget gnupg2 lsb-release && \
     sh install-edirect.sh
 
 WORKDIR /data  
-CMD ["bash"] 
+CMD ["sleep", "infinity"]
