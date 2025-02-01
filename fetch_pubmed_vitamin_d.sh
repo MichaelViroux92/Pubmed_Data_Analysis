@@ -1,0 +1,2 @@
+ #!/bin/bash
+                    /root/edirect/esearch -db pubmed -query 'vitamin d[IT] AND \("Clinical Trial"[PT] OR "Randomized Controlled Trial"[PT] OR "Meta-Analysis"[PT] OR "Systematic Review"[PT] OR "Comparative Study"[PT] OR "Observational Study"[PT] OR "Validation Study"[PT] OR "Case Reports"[PT] OR "Review"[PT]\)' | /root/edirect/efetch -format xml > vitamin_d_pubmed_data.xml
