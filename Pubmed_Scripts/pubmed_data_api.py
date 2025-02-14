@@ -2,13 +2,13 @@ from Bio import Entrez
 import time
 import json
 import pandas as pd
+from datetime import datetime
+import os
 
 
-def build_query():
-    searchterm = input("Enter query search term: ")
+def build_query(searchterm):
     article_type = ('[IT] AND ("Clinical Trial"[PT] OR "Randomized Controlled Trial"[PT] OR "Meta-Analysis"[PT] '
-                    'OR "Systematic Review"[PT] OR "Comparative Study"[PT] OR "Observational Study"[PT] '
-                    'OR "Validation Study"[PT] OR "Case Reports"[PT] OR "Review"[PT])')
+                    'OR "Systematic Review"[PT] OR "Comparative Study"[PT] OR "Observational Study"[PT])')
 
     full_query = searchterm + article_type
     return full_query
@@ -18,7 +18,7 @@ def history(full_query):
     API_key = input("Enter API_key:")
 
     # Get number of data records
-    with Entrez.esearch(db="pubmed", term=query, retmax=1, api_key=API_key, usehistory="y") as handle:
+    with Entrez.esearch(db="pubmed", term=full_query, retmax=1, api_key=API_key, usehistory="y") as handle:
         results = Entrez.read(handle)
         count = int(results["Count"])
         webenv = results["WebEnv"]
@@ -37,12 +37,10 @@ def fetch_data(webenv, query_key, count, API_key, batchsize=5000):
     for start in range(0, max_records, batchsize):
         print(f"Records {start + 1} to {min(start + batchsize, count)}...")
 
-        # Request data from PubMed using efetch, and specify 'json' for retmode
         with Entrez.efetch(db="pubmed", query_key=query_key, webenv=webenv, retstart=start, retmax=batchsize,
                            retmode="xml", api_key=API_key) as handle:
             data = Entrez.read(handle)
 
-            # Process each article
             for record in data.get('PubmedArticle', []):
                 pmid = record['MedlineCitation']['PMID']
                 title = record['MedlineCitation']['Article']['ArticleTitle']
@@ -71,20 +69,26 @@ def fetch_data(webenv, query_key, count, API_key, batchsize=5000):
                 # Append the data to the DataFrame
                 df.loc[len(df)] = [pmid, title, abstract, authors, journal, keywords, url, affiliations]
 
-        time.sleep(10)
+        time.sleep(5)
 
     print("Data fetching complete.")
     return df
 
 Entrez.email = input("Enter emailadres:")
-query = build_query()
-webenv, query_key, count, API_key = history(query)
+searchterm = input("Enter query search term: ")
+full_query = build_query(searchterm)
+webenv, query_key, count, API_key = history(full_query)
 
+df = fetch_data(webenv, query_key, count, API_key)
+print(df.head())
 
-if count > 0:
-    df = fetch_data(webenv, query_key, count, API_key)
-    print(df.head())  # Display a preview of the data
-    df.to_csv("pubmed_results2.csv", index=False)  # Save results to a CSV file
-    print("Data saved to pubmed_results.csv")
-else:
-    print("No articles found.")
+searchterm_cleaned = searchterm.replace('"', '')
+searchterm_for_filename = searchterm_cleaned.replace(" ", "_")
+folder_path = os.path.join("..", "Data", "API")
+os.makedirs(folder_path, exist_ok=True)
+file_path = os.path.join(folder_path, f"{searchterm_for_filename}_results_api_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv")
+
+df.to_csv(file_path, index=False)  # Save results to a CSV file
+print(f"Data saved to {file_path}")
+
+# TODO: Explore how to fetch more then 10000 results using the API if possible
