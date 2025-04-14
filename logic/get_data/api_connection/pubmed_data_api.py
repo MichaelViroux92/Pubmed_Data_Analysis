@@ -16,7 +16,7 @@ class PubMedAPI:
         Entrez.email = self.email
         Entrez.api_key = self.api_key
 
-    def fetch_data(self, full_query, count=10000):
+    def fetch_data(self, full_query, count=9999):
         df = pd.DataFrame(columns=['PMID', 'Title', 'Abstract', 'Authors', 'Journal', 'Keywords', 'URL', 'Affiliations'])
 
         print(f"Email: {self.email}")
@@ -24,12 +24,12 @@ class PubMedAPI:
         print(f"Query: {full_query}")
 
         # Fetching article IDs using esearch
-        handle = Entrez.esearch(db="pubmed", term=full_query, retmax=min(count, 10000))
+        handle = Entrez.esearch(db="pubmed", term=full_query, retmax=min(count, 9999))
         search_results = Entrez.read(handle)
         pmids = search_results['IdList']
 
         # Fetching the actual article data using efetch
-        handle = Entrez.efetch(db="pubmed", id=pmids[:100], retmode="xml", api_key=Entrez.api_key)
+        handle = Entrez.efetch(db="pubmed", id=pmids, retmode="xml", api_key=Entrez.api_key)
         data = Entrez.read(handle)
 
         # Iterate over the fetched articles and extract details
