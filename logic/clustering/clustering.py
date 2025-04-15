@@ -31,7 +31,7 @@ class Clustering:
         feature_names_abstracts = self.vectorizer_abstracts.get_feature_names_out()
         top_words_per_cluster = {}
         
-        for i, centroid in enumerate(self.kmeans_abstracts.cluster_centers_):
+        for i, centroid in enumerate(self.kmeans_model.cluster_centers_):
             top_indices = centroid.argsort()[-num_words:][::-1]
             top_words = [feature_names_abstracts[idx] for idx in top_indices]
             top_words_per_cluster[i] = top_words
