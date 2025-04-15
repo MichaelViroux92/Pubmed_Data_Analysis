@@ -41,6 +41,22 @@ class PostgresDB:
         execute_values(self.cursor, query, values)
         self.conn.commit()
 
+    def fetch_pubmed_data(self, columns=None):
+        if columns is None:
+            query = "SELECT * FROM pubmed_articles"
+        else:
+            selected_columns = " ,".join(columns)
+            query = f"SELECT {selected_columns} FROM pubmed_articles"
+
+        self.cursor.excecute(query)
+        rows = self.cursor.fetchall()
+
+        # Build dataframe
+        if columns is None:
+            columns = [desc[0] for desc in self.cursor.description] # cursor.description: [('id',), ('name',)]. So we just get all columns
+
+        df = pd.Dataframe(rows, columns=columns)
+
     def close(self):
         self.cursor.close()
         self.conn.close()
