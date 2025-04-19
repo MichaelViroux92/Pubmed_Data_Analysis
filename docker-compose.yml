@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # Streamlit Container
+  streamlit:
+    build: ./streamlit
+    ports:
+      - "8501:8501"
+    networks:
+      - pubmed
+
+  # fastAPI Container
+  fastapi:
+    build: ./fastapi
+    ports:
+      - "8000:8000"
+    networks:
+      - pubmed
+    
+    # Postgres Container
+    postgres:
+      image: postgres:15
+      environment:
+        POSTGRES_USER: myuser
+        POSTGRES_PASSWORD: mypassword
+        POSTGRES_DB: mydatabase
+      volumes:
+       - ./data/postgres:/var/lib/postgresql/data #Mounted volume
+
+    # Working Container
+      working:
+        build: ./logic
+        networks:
+          - pubmed
+        environment:
+          - DATABASE_URL=postgresql://myuser:mypassword@db:5432/mydatabase
+
+networks:
+  pubmed:
+    external: true
