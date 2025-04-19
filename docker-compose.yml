@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   # Streamlit Container
-  streamlit:
+  streamlit-container:
     build: ./streamlit
     ports:
       - "8501:8501"
@@ -10,7 +10,7 @@ services:
       - pubmed
 
   # fastAPI Container
-  fastapi:
+  fastapi-container:
     build: ./fastapi
     ports:
       - "8000:8000"
@@ -18,7 +18,7 @@ services:
       - pubmed
     
   # Postgres Container
-  postgres:
+  postgres-container:
     image: postgres:15
     environment:
       POSTGRES_USER: myuser
@@ -28,12 +28,14 @@ services:
       - ./data/postgres:/var/lib/postgresql/data #Mounted volume
 
   # Working Container
-  working:
+  working-container:
     build: ./logic
+    ports:
+      - "8001:8001"
     networks:
       - pubmed
     environment:
-      - DATABASE_URL=postgresql://myuser:mypassword@db:5432/mydatabase
+      - DATABASE_URL=postgresql://myuser:mypassword@postgres:5432/mydatabase
     env_file:
       - .env
 

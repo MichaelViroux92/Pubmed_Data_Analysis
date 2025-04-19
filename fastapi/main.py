@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
+import requests
 
 app = FastAPI()
 
@@ -9,7 +10,7 @@ app = FastAPI()
 @app.get("/search_query")
 def search_query(search_term: str):
     response = requests.post(
-        "http://working-container:5000/fetch_data",  # Replace with Docker service name
+        "http://working-container:8001/fetch_data",  # Replace with Docker service name
         json={"search_term": search_term}
     )
     return JSONResponse(content=response.json())
@@ -20,7 +21,7 @@ def search_query(search_term: str):
 @app.get("/clustering/elbow/input")
 def elbow_request():
     response = requests.post(
-        "http://working-container:5000/clustering/elbow",
+        "http://working-container:8001/clustering/elbow",
         json={}
     )
     return JSONResponse(content=response.json())
@@ -30,7 +31,7 @@ def elbow_request():
 @app.get("/clustering/subtopics/input")
 def get_clustering_subtopic_inputs(k: int = 20, num_words: int = 5):
     response = requests.post(
-        "http://working-container:5000/clustering/subtopics",
+        "http://working-container:8001/clustering/subtopics",
         json={"k": k, "num_words": num_words}
     )
     return JSONResponse(content=response.json())
