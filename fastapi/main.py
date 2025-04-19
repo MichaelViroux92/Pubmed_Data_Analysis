@@ -28,4 +28,3 @@ def subtopics(req: SubtopicRequest):
     vectorized = clustering.vectorize(df)
     clustering.fit_kmeans(vectorized, k=req.k)
     top_words = clustering.top5_cluster(num_words=req.num_words)
-
