@@ -5,7 +5,7 @@ import pandas as pd
 from datetime import datetime
 import os
 from dotenv import load_dotenv
-from ..build_query import BuildQuery
+from get_data.build_query import BuildQuery
 
 load_dotenv()
 

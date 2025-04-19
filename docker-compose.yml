@@ -34,6 +34,8 @@ services:
           - pubmed
         environment:
           - DATABASE_URL=postgresql://myuser:mypassword@db:5432/mydatabase
+        env_file:
+          - .env
 
 networks:
   pubmed:
