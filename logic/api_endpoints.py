@@ -39,7 +39,7 @@ def fetch_data(req: FetchData):
 def inertia_values():
     df_cluster = postgres.fetch_pubmed_data(["pmid", "abstract"])
     vectorized = clustering.vectorize(df_cluster)
-    inertia = clustering.elbowmethod(vectorized, kmax=30)
+    inertia = clustering.elbowmethod(vectorized, kmax=25)
     return {"inertia": inertia}
 
 
@@ -63,3 +63,9 @@ def clustering_subtopics(req: SubtopicRequest):
 
     return {"Labels": descriptive_cluster_names}
 
+# Get clustered dataframe
+@app.post("/labeled_dataframe")
+def get_labeled_dataframe():
+    df_labeled = postgres.fetch_pubmed_data()
+    df_labeled_json = df_labeled.to_dict(orient="records")
+    return {"df_labeled_key": df_labeled_json}

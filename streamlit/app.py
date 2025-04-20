@@ -1,5 +1,7 @@
 import streamlit as st
-import requests  # Make sure to import requests
+import requests 
+import pandas as pd
+import matplotlib.pyplot as plt
 
 st.title("PubMed Search")
 
@@ -8,7 +10,7 @@ search_term = st.text_input("Enter a search term:")
 
 if st.button("Search"):
     response = requests.get(
-        "http://fastapi-container:8000/search_query",  # Correct URL for FastAPI container
+        "http://fastapi-container:8000/search_query",
         params={"search_term": search_term}
     )
     if response.status_code == 200:
@@ -25,6 +27,13 @@ if st.button("Compute Elbow Curve"):
         inertia_values = inertia_data['inertia']
         
         st.write("Inertia values:", inertia_values)
+
+        plt.figure(figsize=(8, 6))
+        plt.plot(range(1, len(inertia_values) + 1), inertia_values, marker='o', linestyle='-', color='b')
+        plt.title("Elbow Curve for KMeans Clustering")
+        plt.xlabel("Number of Clusters (k)")
+        plt.ylabel("Inertia")
+        plt.grid(True)
     else:
         st.error(f"Failed to compute elbow curve: {response.status_code}")
 
@@ -34,19 +43,44 @@ k = st.slider("Number of clusters (k)", min_value=2, max_value=30, value=20)
 num_words = st.slider("Number of top words per cluster", min_value=1, max_value=10, value=5)
 
 # Streamlit button to trigger the clustering subtopics computation
-if st.button("Get Clustering Subtopics"):
-    response = requests.get(  # Use GET here, as per your original request
-        "http://fastapi-container:8000/clustering/subtopics/input",  # Correct URL
-        params={"k": k, "num_words": num_words}  # Changed to use `params` for GET request
+if st.button("Show subtopics"):
+    response = requests.get(  
+        "http://fastapi-container:8000/clustering/subtopics/input", 
+        params={"k": k, "num_words": num_words} 
     )
 
     if response.status_code == 200:
         labels = response.json().get('Labels', [])
         
-        # Display the top words for each cluster
         st.write("Labels for each cluster:")
         for i, label in labels.items():
             st.write(f"Subtopic {i}: {label}")
     else:
         st.error(f"Failed to retrieve clustering subtopics: {response.status_code}")
+
+
+# Generate a graph showing the number of articles per subtopic
+if st.button("Number of articles per subtopic"):
+    response = requests.get(  
+        "http://fastapi-container:8000/labeled_data", 
+    )
+
+    if response.status_code == 200:
+        labeled_data = response.json()
+        df_labeled = pd.DataFrame(labeled_data['df_labeled_key'])
+
+        subtopic_counts = df_labeled['cluster_name'].value_counts()
+        
+        plt.figure(figsize=(10, 6))
+        subtopic_counts.plot(kind='bar', color='skyblue')
+        plt.title('Number of Articles per subtopic')
+        plt.xlabel('Subtopic')
+        plt.ylabel('Number of Articles')
+        plt.xticks(rotation=45, ha='right')
+
+        st.pyplot(plt)
+    else:
+        st.error(f"Failed  {response.status_code}")
+
+
 

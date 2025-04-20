@@ -37,5 +37,11 @@ def get_clustering_subtopic_inputs(k: int = 20, num_words: int = 5):
     return JSONResponse(content=response.json())
 
 
-
-
+# Get labeled dataframe
+@app.get("/labeled_data")
+def get_labeled_data():
+    response = requests.post(
+        "http://working-container:8001/labeled_dataframe",
+        json={}
+    )
+    return JSONResponse(content=response.json())
