@@ -58,6 +58,7 @@ docker-compose up --build
 - Streamlit Dashboard: http://localhost:8501
 - FastAPI UI: http://localhost:8001/docs
 
+---
 
 ## Folder structure
 Pubmed_Data_Analysis
@@ -101,6 +102,7 @@ Pubmed_Data_Analysis
 ├── docker-compose.yml
 └── README.md
 
+---
 
 ## API Endpoints
 
