@@ -78,3 +78,12 @@ class Clustering:
             cluster_names[cluster_id] = cluster_name
 
         return cluster_names
+    
+    def pmid_clustername_mapping(self, precomputed_cluster_names): # I did not give it the name cluster_names to point out this variable comes from outside, not from the return directly. Just to make it clear
+        labels = self.kmeans_model.labels_
+        precomputed_cluster_names = self.descriptive_names_clusters()
+
+        pmid_to_cluster = dict(zip(self.df['pmid'], labels))
+        pmid_to_cluster_names = {pmid: precomputed_cluster_names[label] for pmid, label in pmid_to_cluster.items()}
+
+        return pmid_to_cluster_names

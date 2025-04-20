@@ -26,10 +26,18 @@ class PostgresDB:
                             journal TEXT,
                             keywords TEXT,
                             url TEXT,
-                            affiliations TEXT
+                            affiliations TEXT,
+                            cluster_name TEXT
                             );
                             """)
         self.conn.commit()
+
+    def add_cluster_name_column_if_missing(self):
+        try:
+            self.cursor.execute("ALTER TABLE pubmed_articles ADD COLUMN cluster_name TEXT;")
+            self.conn.commit()
+        except psycopg2.errors.DuplicateColumn:
+            self.conn.rollback()  # if column already exists, ignore
 
     def insert_pubmed_data(self, df):
         query = """
@@ -58,6 +66,17 @@ class PostgresDB:
 
         df = pd.DataFrame(rows, columns=columns)
         return df
+
+
+    def update_cluster_labels(self, pmid, cluster_name):
+        query = f"""
+        UPDATE pubmed_articles
+        SET cluster_name = %s
+        WHERE pmid = %s
+        """
+        self.cursor.execute(query, (cluster_name, pmid))
+        self.conn.commit()
+
 
     def close(self):
         self.cursor.close()

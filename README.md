@@ -1,26 +1,54 @@
-# Pubmed_Data_Analysis
+# PubMed Data Analysis Platform
 
-Data binnentrekken
+A modular pipeline for fetching, clustering, and labeling scientific abstracts from PubMed using machine learning and OpenAI. Then this labeled data can be further analyzed for explorative purposes. The project uses a **Docker-based microservice architecture** and presents results in a **Streamlit dashboard**.
 
-EUtilities
-	ESearch => ID binnentrekken via zoekquery in URL mee te geven
-	EFetch => Lijst van ID's gebruiken om data van alle artikelen binnen te trekken
-	Met API key: 10requests/seconde, zonder 3requests/seconde
-	Limiet op 10000 artikels om binnen te trekken => history server gebruiken
-	History server => ID's kunnen worden opgeslagen als batch, gebruiken om data binnen te trekken.
-	Volgende batch kan in history server worden opgeslagen enzovoort.History server "onthoudt" welke artikels al zijnbinnengehaald. Dus de volgende 10000 artikels zijn anderen
+---
 
-If you try to fetch records in batches without the History Server, you would have to manually run an ESearch query multiple times, each time requesting different slices of records.
+## Architecture Overview
 
-For example, you might first run a search for articles 1-10,000, then for 10,001-20,000, and so on.
+This project uses **Docker Compose** to orchestrate the following services:
 
-Problem: Each time you run ESearch, PubMed will return a fresh search result, but it doesn’t know where the last query left off. So, you’ll be re-running the same search over and over again, which is inefficient and will require more time and resources.
+- **working-container**: 
+  - Fetches PubMed data
+  - Handles data processing & clustering logic
+  - Interacts with PostgreSQL
+- **fastapi-container**: 
+  - API gateway
+  - Exposes endpoints to trigger clustering and return results
+- **streamlit-container**: 
+  - Visualizes clustered data and insights
+- **postgres-container**: 
+  - Stores raw and processed data
 
-With the History Server, once you’ve done the search, you can continue fetching from where you left off by just referencing the WebEnv and QueryKey. You don’t have to repeat the search.
+---
+
+## Features
+
+- Fetch PubMed data and abstracts
+- TF-IDF vectorization + KMeans clustering on abstracts
+- Generate human-readable cluster labels using GPT (OpenAI API)
+- Visualize labeled data in an interactive Streamlit dashboard
+- Save & query results from PostgreSQL
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/your-username/pubmed-clustering.git
+cd pubmed-clustering
+
+### 2. Environmental parameters
+
+OPENAI_API_KEY=your_openai_key
+POSTGRES_USER=your_user
+POSTGRES_PASSWORD=your_password
+POSTGRES_DB=your_database
 
 
-Edirect
-	Via command line data binnentrekken
-	Eenvoudiger maar minder flexibel
-	Via docker container om te isoleren
+### 3. Build and start the application
+
+docker-compose up --build
 

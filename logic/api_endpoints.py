@@ -28,8 +28,9 @@ class FetchData(BaseModel):
 def fetch_data(req: FetchData):
     full_query = BuildQuery.build_query(req.search_term)
     df = pubmedapi.fetch_data(full_query) 
-    table = postgres.create_table()
-    db = postgres.insert_pubmed_data(df)
+    postgres.create_table()
+    postgres.add_cluster_name_column_if_missing()
+    postgres.insert_pubmed_data(df)
     return {"message": "Data loaded into database"}
 
 
@@ -53,6 +54,12 @@ def clustering_subtopics(req: SubtopicRequest):
     df_cluster = postgres.fetch_pubmed_data(["pmid", "abstract"])
     vectorized = clustering.vectorize(df_cluster)
     clustering.fit_kmeans(vectorized, k=req.k)
-    cluster_descriptive_labels = clustering.descriptive_names_clusters(num_words=req.num_words)
-    return {"Labels": cluster_descriptive_labels}
+
+    descriptive_cluster_names = clustering.descriptive_names_clusters(num_words=req.num_words)
+    pmid_to_name = clustering.pmid_clustername_mapping(descriptive_cluster_names)
+
+    for pmid, cluster_name in pmid_to_name.items():
+        postgres.update_cluster_labels(pmid, cluster_name)
+
+    return {"Labels": descriptive_cluster_names}
 
