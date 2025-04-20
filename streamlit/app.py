@@ -41,12 +41,12 @@ if st.button("Get Clustering Subtopics"):
     )
 
     if response.status_code == 200:
-        top_words = response.json().get('Top words', [])
+        labels = response.json().get('Labels', [])
         
         # Display the top words for each cluster
-        st.write("Top words for each cluster:")
-        for i, words in top_words.items():
-            st.write(f"Cluster {i}: {', '.join(words)}")
+        st.write("Labels for each cluster:")
+        for i, label in labels.items():
+            st.write(f"Subtopic {i}: {label}")
     else:
         st.error(f"Failed to retrieve clustering subtopics: {response.status_code}")
 

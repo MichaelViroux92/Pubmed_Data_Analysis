@@ -1,7 +1,11 @@
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
-
+from dotenv import load_dotenv
+import os
+import openai
+ 
+load_dotenv()
 
 class Clustering:
     def __init__(self):
@@ -9,7 +13,9 @@ class Clustering:
         self.inertia = []
         self.kmeans_model = None
         self.vectorized_abstracts = None
-        self.df = None 
+        self.df = None
+        self.openai_api_key = os.getenv("OPENAI_API_KEY")
+        openai.api_key = self.openai_api_key  
 
     def vectorize(self, df):
         self.df = df
@@ -33,7 +39,7 @@ class Clustering:
         self.kmeans_model = KMeans(n_clusters=k, random_state=42, n_init=10)
         self.kmeans_model.fit(vectorized_abstracts)
 
-    def top5_cluster(self, num_words=5):
+    def topwords_cluster(self, num_words):
         feature_names_abstracts = self.vectorizer_abstracts.get_feature_names_out()
         top_words_per_cluster = {}
         
@@ -44,3 +50,31 @@ class Clustering:
 
         return top_words_per_cluster
 
+
+    def get_cluster_name(self, top_words):
+        prompt = f"Based on the following top words, generate a descriptive name for this cluster: {', '.join(top_words)}"
+        
+        response = openai.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+            {"role": "user", "content": prompt}
+            ],
+            max_tokens=10,
+            n=1,
+            stop=None,
+            temperature=0.5
+        )
+
+        cluster_name = response.choices[0].message.content.strip()
+        return cluster_name
+    
+
+    def descriptive_names_clusters(self, num_words=5):
+        top_words_per_cluster = self.topwords_cluster(num_words=num_words)
+        cluster_names = {}
+
+        for cluster_id, top_words in top_words_per_cluster.items():
+            cluster_name = self.get_cluster_name(top_words)
+            cluster_names[cluster_id] = cluster_name
+
+        return cluster_names

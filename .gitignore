@@ -3,3 +3,5 @@
 
 # Ignore the jupyter notebook "play" file
 /Pubmed_Data_Analysis.ipynb
+
+.env

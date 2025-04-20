@@ -53,6 +53,6 @@ def clustering_subtopics(req: SubtopicRequest):
     df_cluster = postgres.fetch_pubmed_data(["pmid", "abstract"])
     vectorized = clustering.vectorize(df_cluster)
     clustering.fit_kmeans(vectorized, k=req.k)
-    top_words = clustering.top5_cluster(num_words=req.num_words)
-    return {"Top words": top_words}
+    cluster_descriptive_labels = clustering.descriptive_names_clusters(num_words=req.num_words)
+    return {"Labels": cluster_descriptive_labels}
 
