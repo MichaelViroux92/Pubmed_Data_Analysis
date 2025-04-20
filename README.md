@@ -61,6 +61,8 @@ docker-compose up --build
 ---
 
 ## Folder structure
+
+```
 Pubmed_Data_Analysis
 │
 ├── data
@@ -101,6 +103,7 @@ Pubmed_Data_Analysis
 ├── .gitignore
 ├── docker-compose.yml
 └── README.md
+```
 
 ---
 
