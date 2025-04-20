@@ -73,6 +73,8 @@ Pubmed_Data_Analysis
 │   └── requirements.txt
 │
 ├── logic
+│   ├── Dockerfile
+│   ├── requirements.txt
 │   ├── clustering
 │   │   └── clustering.py
 │   │
@@ -90,9 +92,6 @@ Pubmed_Data_Analysis
 │       ├── __init__.py
 │       ├── build_query.py
 │       └── api_endpoints.py
-│
-├── Dockerfile
-├── requirements.txt
 │
 ├── streamlit
 │   ├── app.py
