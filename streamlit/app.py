@@ -36,7 +36,7 @@ num_words = st.slider("Number of top words per cluster", min_value=1, max_value=
 # Streamlit button to trigger the clustering subtopics computation
 if st.button("Get Clustering Subtopics"):
     response = requests.get(  # Use GET here, as per your original request
-        "http://fastapi-container:8000/clustering/subtopics",  # Correct URL
+        "http://fastapi-container:8000/clustering/subtopics/input",  # Correct URL
         params={"k": k, "num_words": num_words}  # Changed to use `params` for GET request
     )
 
@@ -45,7 +45,7 @@ if st.button("Get Clustering Subtopics"):
         
         # Display the top words for each cluster
         st.write("Top words for each cluster:")
-        for i, words in enumerate(top_words, 1):
+        for i, words in top_words.items():
             st.write(f"Cluster {i}: {', '.join(words)}")
     else:
         st.error(f"Failed to retrieve clustering subtopics: {response.status_code}")

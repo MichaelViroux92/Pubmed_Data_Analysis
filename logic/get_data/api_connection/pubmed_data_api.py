@@ -64,28 +64,3 @@ class PubMedAPI:
         print("Data fetching complete.")
         return df
 
-# Get search term and build query
-searchterm = input("Enter query search term: ")
-full_query = BuildQuery.build_query(searchterm)
-
-# Create PubMedAPI instance and fetch data
-pubmedapi = PubMedAPI()
-df = pubmedapi.fetch_data(full_query)
-
-# Display the first few rows
-print(df.head())
-
-# Clean up the search term for file naming
-searchterm_cleaned = searchterm.replace('"', '')
-searchterm_for_filename = searchterm_cleaned.replace(" ", "_")
-
-# Define file paths
-folder_path = os.path.join("..", "data")
-os.makedirs(folder_path, exist_ok=True)
-file_path = os.path.join(folder_path, f"{searchterm_for_filename}_results_api_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv")
-
-# Save results to a CSV file
-df.to_csv(file_path, index=False)
-print(f"Data saved to {file_path}")
-
-# TODO: Explore how to fetch more than 10000 results using the API if possible

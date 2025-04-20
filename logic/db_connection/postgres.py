@@ -1,5 +1,6 @@
 import psycopg2
 from psycopg2.extras import execute_values
+import pandas as pd
 
 class PostgresDB:
     def __init__(self, host, dbname, user, password, port=5432):
@@ -25,7 +26,7 @@ class PostgresDB:
                             journal TEXT,
                             keywords TEXT,
                             url TEXT,
-                            affiliations TEXT,
+                            affiliations TEXT
                             );
                             """)
         self.conn.commit()
@@ -45,17 +46,18 @@ class PostgresDB:
         if columns is None:
             query = "SELECT * FROM pubmed_articles"
         else:
-            selected_columns = " ,".join(columns)
+            selected_columns = ", ".join(columns)
             query = f"SELECT {selected_columns} FROM pubmed_articles"
 
-        self.cursor.excecute(query)
+        self.cursor.execute(query)
         rows = self.cursor.fetchall()
 
         # Build dataframe
         if columns is None:
             columns = [desc[0] for desc in self.cursor.description] # cursor.description: [('id',), ('name',)]. So we just get all columns
 
-        df = pd.Dataframe(rows, columns=columns)
+        df = pd.DataFrame(rows, columns=columns)
+        return df
 
     def close(self):
         self.cursor.close()

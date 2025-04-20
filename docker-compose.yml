@@ -26,6 +26,8 @@ services:
       POSTGRES_DB: mydatabase
     volumes:
       - ./data/postgres:/var/lib/postgresql/data #Mounted volume
+    networks:
+      - pubmed
 
   # Working Container
   working-container:
@@ -35,7 +37,7 @@ services:
     networks:
       - pubmed
     environment:
-      - DATABASE_URL=postgresql://myuser:mypassword@postgres:5432/mydatabase
+      - DATABASE_URL=postgresql://myuser:mypassword@postgres-container:5432/mydatabase
     env_file:
       - .env
 

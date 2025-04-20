@@ -1,16 +1,22 @@
 
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.cluster import KMeans
+
 
 class Clustering:
     def __init__(self):
         self.vectorizer_abstracts = TfidfVectorizer(stop_words='english', ngram_range=(1,2))
         self.inertia = []
         self.kmeans_model = None
+        self.vectorized_abstracts = None
+        self.df = None 
 
     def vectorize(self, df):
-        df['Abstract'] = df['Abstract'].fillna("No abstract available")
-        vectorized_abstracts = self.vectorizer_abstracts.fit_transform(df['Abstract'])
+        self.df = df
+        df['abstract'] = df['abstract'].fillna("No abstract available")
+        self.vectorized_abstracts = self.vectorizer_abstracts.fit_transform(df['abstract'])
 
-        return vectorized_abstracts
+        return self.vectorized_abstracts
     
     def elbowmethod(self, vectorized_abstracts, kmax):
         self.inertia.clear()
