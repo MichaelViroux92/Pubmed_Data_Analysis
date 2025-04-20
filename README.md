@@ -111,35 +111,35 @@ Pubmed_Data_Analysis
 
 ### GET /search_query
 
-#### Description:
-- Triggers data fetching from PubMed using the provided search term. This sends a POST request to the working container.
+- **Description**:
+  - Triggers data fetching from PubMed using the provided search term. This sends a POST request to the working container.
 
-#### Query Parameters:
-- search_term (string): The search term used to query PubMed.
+- **Query Parameters**:
+  - search_term (string): The search term used to query PubMed.
 
-#### Returns:
-- A success message once the data is fetched and loaded into the database.
+- **Returns**:
+  - A success message once the data is fetched and loaded into the database.
 
 ### GET /clustering/elbow/input
 
-#### Description:
-- Fetches the inertia values used for plotting the elbow curve to determine the optimal number of clusters.
+- **Description**:
+  - Fetches the inertia values used for plotting the elbow curve to determine the optimal number of clusters.
 
-#### Returns:
+- **Returns**:
 {
   "inertia": [value1, value2, ..., valueN]
 }
 
 ### GET /clustering/subtopics/input
 
-#### Description:
-- Triggers clustering and labeling of articles into subtopics using K-Means.
+- **Description**:
+  - Triggers clustering and labeling of articles into subtopics using K-Means.
 
-#### Query Parameters:
-- k (int): Number of clusters (default: 20)
-- num_words (int): Number of descriptive words per cluster (default: 5)
+- **Query Parameters**:
+  - k (int): Number of clusters (default: 20)
+  - num_words (int): Number of descriptive words per cluster (default: 5)
 
-#### Returns:
+- **Returns**:
 {
   "Labels": {
     "Cluster 0": "Vitamin D Metabolism",
@@ -150,10 +150,10 @@ Pubmed_Data_Analysis
 
 ### GET /labeled_data
 
-#### Description:
-- Fetches the labeled PubMed data from the Postgres database.
+- **Description**:
+  - Fetches the labeled PubMed data from the Postgres database.
 
-#### Returns:
+- **Returns**:
 {
   "df_labeled_key": [
     {
@@ -168,42 +168,42 @@ Pubmed_Data_Analysis
 
 ### POST /fetch_data
 
-#### Description:
-- Fetches data from PubMed, stores it in the PostgreSQL database.
+- **Description**:
+  - Fetches data from PubMed, stores it in the PostgreSQL database.
 
-#### Request Body:
+- **Request Body**:
 {
   "search_term": "vitamin d"
 }
 
-#### Returns:
+- **Returns**:
 {
   "message": "Data loaded into database"
 }
 
 ### POST /clustering/elbow
 
-#### Description:
-- Computes inertia values from vectorized abstracts for elbow curve visualization.
+- **Description**:
+  - Computes inertia values from vectorized abstracts for elbow curve visualization.
 
-#### Returns:
+- **Returns**:
 {
   "inertia": [10.1, 8.4, 6.5, ...]
 }
 
 ### POST /clustering/subtopics
 
-#### Description:
-- Performs K-Means clustering on article abstracts.
-- Uses openAI API to assign descriptive cluster names.
+- **Description**:
+  - Performs K-Means clustering on article abstracts.
+  - Uses openAI API to assign descriptive cluster names.
 
-#### Request Body:
+- **Request Body**:
 {
   "k": 4,
   "num_words": 5
 }
 
-#### Returns:
+- **Returns**:
 {
   "Labels": {
     "Cluster 0": "Bone Health",
@@ -214,10 +214,10 @@ Pubmed_Data_Analysis
 
 ### POST /labeled_dataframe
 
-#### Description:
-- Fetches the labeled DataFrame (as JSON records) from the database for further processing or visualization.
+- **Description**:
+  - Fetches the labeled DataFrame (as JSON records) from the database for further processing or visualization.
 
-#### Returns:
+- **Returns**:
 {
   "df_labeled_key": [
     {
