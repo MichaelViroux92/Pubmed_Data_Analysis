@@ -36,11 +36,9 @@ services:
       - "8001:8001"
     networks:
       - pubmed
-    environment:
-      - DATABASE_URL=postgresql://myuser:mypassword@postgres-container:5432/mydatabase
     env_file:
       - .env
 
 networks:
   pubmed:
-    external: true
+    driver: bridge
