@@ -1,83 +1,120 @@
 import psycopg2
 from psycopg2.extras import execute_values
 import pandas as pd
+from typing import List
 
 class PostgresDB:
-    def __init__(self, host, dbname, user, password, port=5432):
-        self.conn = psycopg2.connect(
-            host=host,
-            dbname=dbname,
-            user=user,
-            password=password,
-            port=port
-        )
-        self.cursor = self.conn.cursor()
+    def __init__(self, host: str, dbname: str, user: str, password: str, port: int= 5432):
+        try:    
+            self.conn = psycopg2.connect(
+                host=host,
+                dbname=dbname,
+                user=user,
+                password=password,
+                port=port
+            )
+        except psycopg2.Error as e:
+            raise ConnectionError(f"Error connecting to PostgreSQL: {e}")
+        
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
 
-# pmid, title, abstract, authors, journal, keywords, url, affiliations
-
-    def create_table(self):
-        self.cursor.execute("""
-                            CREATE TABLE IF NOT EXISTS pubmed_articles
-                            (
-                            pmid TEXT PRIMARY KEY,
-                            title TEXT,
-                            abstract TEXT,
-                            authors TEXT,
-                            journal TEXT,
-                            keywords TEXT,
-                            url TEXT,
-                            affiliations TEXT,
-                            cluster_name TEXT
-                            );
-                            """)
-        self.conn.commit()
-
-    def add_cluster_name_column_if_missing(self):
+    def create_table(self) -> None:
+        query = """
+            CREATE TABLE IF NOT EXISTS pubmed_articles(
+                pmid TEXT PRIMARY KEY,
+                title TEXT,
+                abstract TEXT,
+                publication_types TEXT,
+                authors TEXT,
+                affiliations TEXT,
+                journal TEXT,
+                keywords TEXT,
+                url TEXT,
+                cluster_name TEXT
+            );
+            """
         try:
-            self.cursor.execute("ALTER TABLE pubmed_articles ADD COLUMN cluster_name TEXT;")
+            with self.conn.cursor() as cursor:
+                cursor.execute(query)
             self.conn.commit()
-        except psycopg2.errors.DuplicateColumn:
-            self.conn.rollback()  # if column already exists, ignore
+        except psycopg2.Error as e:
+            self.conn.rollback()
+            raise RuntimeError(f"Failed to create table: {e}")
 
-    def insert_pubmed_data(self, df):
+    def insert_articles(self, articles: List[Article]) -> None:
+        if not articles:
+            return
         query = """
         INSERT INTO pubmed_articles
-        (pmid, title, abstract, authors, journal, keywords, url, affiliations)
+        (pmid, title, abstract, publication_types, authors, affiliations, journal, keywords, url)
         VALUES %s
         ON CONFLICT (pmid) DO NOTHING;
         """
-        values = list(df.itertuples(index=False, name=None))
-        execute_values(self.cursor, query, values)
-        self.conn.commit()
+        values = [
+            (
+                a.pmid,
+                a.title,
+                a.abstract,
+                ", ".join(a.publication_types),
+                ", ".join(a.authors),
+                "; ".join(a.affiliations),
+                a.journal,
+                ", ".join(a.keywords),
+                a.url,
+            )
+            for a in articles
+        ]
+     
+        try:
+            with self.conn.cursor() as cursor:
+                execute_values(cursor, query, values)
+            self.conn.commit()
+        except psycopg2.Error as e:
+            self.conn.rollback()
+            raise RuntimeError(f"Failed to insert articles: {e}")
 
-    def fetch_pubmed_data(self, columns=None):
+    def fetch_articles_df(self, columns: Optional[List[str]] = None) -> pd.DataFrame:
         if columns is None:
             query = "SELECT * FROM pubmed_articles"
-        else:
-            selected_columns = ", ".join(columns)
-            query = f"SELECT {selected_columns} FROM pubmed_articles"
+        else: 
+            query = f"SELECT {', '.join(columns)} FROM pubmed_articles"
 
-        self.cursor.execute(query)
-        rows = self.cursor.fetchall()
+        try:
+            with self.conn.cursor() as cursor: 
+                cursor.execute(query)
+                rows = cursor.fetchall()
+        
+                if columns is None:
+                    columns = [desc[0] for desc in cursor.description] # cursor.description: [('id',), ('name',)] tuple. [0] is column name
 
-        # Build dataframe
-        if columns is None:
-            columns = [desc[0] for desc in self.cursor.description] # cursor.description: [('id',), ('name',)]. So we just get all columns
+        except psycopg2.Error as e:
+            raise RuntimeError(f"Failed to fetch data: {e}")
 
-        df = pd.DataFrame(rows, columns=columns)
-        return df
+        # Build dataframe        
+        return pd.DataFrame(rows, columns=columns)
 
-
-    def update_cluster_labels(self, pmid, cluster_name):
-        query = f"""
-        UPDATE pubmed_articles
-        SET cluster_name = %s
-        WHERE pmid = %s
+    def update_cluster_labels(self, updates: List[tuple[str, str]]) -> None:
+        if not updates:
+            return
+        
+        query = """
+        UPDATE pubmed_articles as p
+        SET cluster_name = data.cluster_name
+        FROM (VALUES %s) AS data(pmid, cluster_name)
+        WHERE p.pmid = data.pmid
         """
-        self.cursor.execute(query, (cluster_name, pmid))
-        self.conn.commit()
+        try:
+            with self.conn.cursor() as cursor:
+                execute_values(cursor, query, updates)
+            self.conn.commit()
+        except psycopg2.Error as e:
+            self.conn.rollback()
+            raise RuntimeError(f"Failed to bulk update cluster labels: {e}")
 
-
-    def close(self):
-        self.cursor.close()
-        self.conn.close()
+    def close(self) -> None:
+        if self.conn:
+            self.conn.close()
