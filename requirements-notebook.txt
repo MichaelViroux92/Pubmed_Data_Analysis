@@ -1,0 +1,11 @@
+jupyterlab
+pandas
+numpy
+scikit-learn
+matplotlib
+seaborn
+bertopic
+sentence-transformers
+umap-learn
+hdbscan
+python-dotenv

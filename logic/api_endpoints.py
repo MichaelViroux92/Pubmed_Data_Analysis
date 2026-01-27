@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from get_data.build_query import BuildQuery
-from get_data.api_connection.pubmed_data_api import PubMedAPI
+from get_data.build_query import build_query
+from get_data.api_connection.pubmed_data_api import fetch_pubmed_articles
 from db_connection.postgres import PostgresDB
 from clustering.clustering import Clustering
 import os
@@ -11,7 +11,6 @@ load_dotenv()
 
 app = FastAPI()
 clustering = Clustering()
-pubmedapi = PubMedAPI()
 postgres = PostgresDB(
     host=os.getenv("DB_HOST"),
     dbname=os.getenv("DB_NAME"),
@@ -26,11 +25,10 @@ class FetchData(BaseModel):
 
 @app.post("/fetch_data")
 def fetch_data(req: FetchData):
-    full_query = BuildQuery.build_query(req.search_term)
-    df = pubmedapi.fetch_data(full_query) 
+    full_query = build_query(req.search_term)
+    articles = fetch_pubmed_articles(full_query) 
     postgres.create_table()
-    postgres.add_cluster_name_column_if_missing()
-    postgres.insert_pubmed_data(df)
+    postgres.insert_articles(articles)
     return {"message": "Data loaded into database"}
 
 

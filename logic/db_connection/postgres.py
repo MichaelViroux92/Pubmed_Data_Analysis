@@ -1,7 +1,8 @@
 import psycopg2
 from psycopg2.extras import execute_values
 import pandas as pd
-from typing import List
+from typing import List, Optional
+from get_data.api_connection.pubmed_data_api import Article
 
 class PostgresDB:
     def __init__(self, host: str, dbname: str, user: str, password: str, port: int= 5432):
@@ -28,7 +29,7 @@ class PostgresDB:
                 pmid TEXT PRIMARY KEY,
                 title TEXT,
                 abstract TEXT,
-                publication_types TEXT,
+                publicationtype TEXT,
                 authors TEXT,
                 affiliations TEXT,
                 journal TEXT,
@@ -50,7 +51,7 @@ class PostgresDB:
             return
         query = """
         INSERT INTO pubmed_articles
-        (pmid, title, abstract, publication_types, authors, affiliations, journal, keywords, url)
+        (pmid, title, abstract, publicationtype, authors, affiliations, journal, keywords, url)
         VALUES %s
         ON CONFLICT (pmid) DO NOTHING;
         """
@@ -59,7 +60,7 @@ class PostgresDB:
                 a.pmid,
                 a.title,
                 a.abstract,
-                ", ".join(a.publication_types),
+                ", ".join(a.publicationtype),
                 ", ".join(a.authors),
                 "; ".join(a.affiliations),
                 a.journal,

@@ -5,7 +5,6 @@ import pandas as pd
 from datetime import datetime
 import os
 from dotenv import load_dotenv
-from get_data.build_query import BuildQuery
 from dataclasses import dataclass
 from typing import List, Optional
 
@@ -49,14 +48,14 @@ def parse_pubmed_record(record) -> Article:
 
     #publicationtype
     publicationtype = [
-        pt.get('#text', '').strip() for pt in article.get('PublicationTypeList', [])
+        textify(pt) for pt in article.get('PublicationTypeList', [])
     ]
 
     #authors
     authors = [
-        f"{author.get('LastName'), ''} {author.get('ForeName'), ''}".strip()
+        name
         for author in article.get('AuthorList', [])
-        if author.get('LastName') or author.get('Forename')
+        if (name := f"{author.get('LastName', '')} {author.get('ForeName', '')}".strip())
     ]
 
     #affiliations
@@ -76,7 +75,8 @@ def parse_pubmed_record(record) -> Article:
 
     #keywords
     keywords = [
-        keyword['DescriptorName'].get('#text', '') for keyword in record['MedlineCitation'].get('MeshHeadingList', [])
+        textify(keyword.get('DescriptorName', ''))
+        for keyword in record['MedlineCitation'].get('MeshHeadingList', [])
     ]
     
     #url
@@ -93,6 +93,12 @@ def parse_pubmed_record(record) -> Article:
         keywords = keywords,
         url = url,
     )
+
+
+def textify(value):
+    if isinstance(value, dict):
+        return value.get('#text', '').strip()
+    return str(value).strip()
 
 
 def fetch_pubmed_articles(query: str, max_results: int = 9999) -> List[Article]:
