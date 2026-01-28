@@ -1,7 +1,19 @@
-# Ignore the "data" folder
-/Data/ 
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
 
-# Ignore the jupyter notebook "play" file
-/Pubmed_Data_Analysis.ipynb
+# ---- Jupyter ----
+.ipynb_checkpoints/
+notebooks/*.ipynb
 
+# ---- Data / exports ----
+*.csv
+data/
+Data/
+
+# ---- Environment ----
 .env
+
+# ---- Local scripts ----
+export_data_csv.sh

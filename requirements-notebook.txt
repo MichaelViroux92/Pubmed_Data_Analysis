@@ -9,3 +9,5 @@ sentence-transformers
 umap-learn
 hdbscan
 python-dotenv
+psycopg2-binary
+biopython
