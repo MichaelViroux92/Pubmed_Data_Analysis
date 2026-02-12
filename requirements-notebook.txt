@@ -11,3 +11,4 @@ hdbscan
 python-dotenv
 psycopg2-binary
 biopython
+openai>=1.10.0
