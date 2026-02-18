@@ -5,7 +5,7 @@ from config import (
     VECTORIZER_CONFIG,
     OPENAI_MODEL
 )
-from typing import List
+from typing import List, Dict, Tuple
 from sentence_transformers import SentenceTransformer
 from umap import UMAP
 from hdbscan import HDBSCAN
@@ -46,3 +46,9 @@ def build_represenation_model():
         prompt=TOPIC_LABEL_PROMPT
     )
 
+# Mapping topics to articles
+def map_pmid_to_topic(pmids: List[str], topics: List[int], topic_id_to_label: Dict[int, str]) -> List[Tuple[str, str]]:
+    return [
+         (pmid, topic_id_to_label.get(topic_id))
+         for pmid, topic_id in zip(pmids, topics)
+    ]

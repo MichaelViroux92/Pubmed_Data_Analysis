@@ -17,3 +17,6 @@ Data/
 
 # ---- Local scripts ----
 export_data_csv.sh
+
+# ---- Non production folders ----
+experiment/

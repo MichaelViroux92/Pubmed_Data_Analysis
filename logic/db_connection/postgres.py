@@ -35,7 +35,8 @@ class PostgresDB:
                 journal TEXT,
                 keywords TEXT,
                 url TEXT,
-                cluster_name TEXT
+                topic_label TEXT,
+                topic_id INTEGER
             );
             """
         try:
@@ -78,7 +79,7 @@ class PostgresDB:
             self.conn.rollback()
             raise RuntimeError(f"Failed to insert articles: {e}")
 
-    def fetch_articles_df(self, columns: Optional[List[str]] = None) -> pd.DataFrame:
+    def fetch_articles(self, columns: Optional[List[str]] = None) -> Tuple[List, ...]:
         if columns is None:
             query = "SELECT * FROM pubmed_articles"
         else: 
@@ -88,24 +89,22 @@ class PostgresDB:
             with self.conn.cursor() as cursor: 
                 cursor.execute(query)
                 rows = cursor.fetchall()
-        
-                if columns is None:
-                    columns = [desc[0] for desc in cursor.description] # cursor.description: [('id',), ('name',)] tuple. [0] is column name
 
         except psycopg2.Error as e:
             raise RuntimeError(f"Failed to fetch data: {e}")
+      
+        return tuple(map(list, zip(*rows))) #for each element inside zip(*rows), apply list() to it
+    
 
-        # Build dataframe        
-        return pd.DataFrame(rows, columns=columns)
-
-    def update_cluster_labels(self, updates: List[tuple[str, str]]) -> None:
+    def update_cluster_labels(self, updates: List[tuple[str, str, int]]) -> None:
         if not updates:
             return
         
         query = """
         UPDATE pubmed_articles as p
-        SET cluster_name = data.cluster_name
-        FROM (VALUES %s) AS data(pmid, cluster_name)
+        SET topic_label = data.topic_label
+        SET topic_id = data.topic_id
+        FROM (VALUES %s) AS data(pmid, topic_label, topic_id)
         WHERE p.pmid = data.pmid
         """
         try:

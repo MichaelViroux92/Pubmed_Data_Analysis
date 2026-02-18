@@ -3,9 +3,11 @@ from pydantic import BaseModel
 from get_data.build_query import build_query
 from get_data.api_connection.pubmed_data_api import fetch_pubmed_articles
 from db_connection.postgres import PostgresDB
-from clustering.clustering import Clustering
+from logic.experiment.clustering import Clustering
 import os
 from dotenv import load_dotenv
+import clustering.topic_modeling as tm
+from clustering.config import EMBEDDING_MODEL
 
 load_dotenv()
 
@@ -31,6 +33,41 @@ def fetch_data(req: FetchData):
     postgres.insert_articles(articles)
     return {"message": "Data loaded into database"}
 
+# Topic labels
+@app.post("/clustering/topics")
+def topic_labeling():
+    pmids, abstracts = postgres.fetch_articles(["pmid", "abstract"])
+    embedding_model = tm.build_embedder(EMBEDDING_MODEL)
+    embedded_abstracts = tm.encode_abstracts(embedding_model, abstracts)
+    topic_model = tm.build_topic_model()
+    topics, probs = topic_model.fit_transform(abstracts, embedded_abstracts)
+    representation_model = tm.build_represenation_model()
+    topic_model.update_topics(abstracts, representation_model=representation_model)
+    topic_info = topic_model.get_topic_info()
+    topic_id_to_label = dict(zip(topic_info.Topic, topic_info.Name))
+    update_db_labels = tm.map_pmid_to_topic(
+        pmids=pmids,
+        topics=topics,
+        topic_id_to_label=topic_id_to_label,
+    )
+    postgres.update_cluster_labels(update_db_labels)
+    return {
+        "num_topics": len(topic_info) - 1,
+        "topics": topic_info.to_dict(orient='records')
+    }
+
+
+
+# Get clustered dataframe
+@app.post("/labeled_dataframe")
+def get_labeled_dataframe():
+    df_labeled = postgres.fetch_pubmed_data()
+    df_labeled_json = df_labeled.to_dict(orient="records")
+    return {"df_labeled_key": df_labeled_json}
+
+
+
+# ----------------------------------------------------------------------
 
 # Get inertia values for elbow curve
 @app.post("/clustering/elbow")
@@ -39,6 +76,7 @@ def inertia_values():
     vectorized = clustering.vectorize(df_cluster)
     inertia = clustering.elbowmethod(vectorized, kmax=25)
     return {"inertia": inertia}
+
 
 
 # Get the clustered labels
@@ -60,10 +98,3 @@ def clustering_subtopics(req: SubtopicRequest):
         postgres.update_cluster_labels(pmid, cluster_name)
 
     return {"Labels": descriptive_cluster_names}
-
-# Get clustered dataframe
-@app.post("/labeled_dataframe")
-def get_labeled_dataframe():
-    df_labeled = postgres.fetch_pubmed_data()
-    df_labeled_json = df_labeled.to_dict(orient="records")
-    return {"df_labeled_key": df_labeled_json}
