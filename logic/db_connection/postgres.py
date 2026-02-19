@@ -79,7 +79,7 @@ class PostgresDB:
             self.conn.rollback()
             raise RuntimeError(f"Failed to insert articles: {e}")
 
-    def fetch_articles(self, columns: Optional[List[str]] = None) -> Tuple[List, ...]:
+    def _fetch_articles(self, columns: Optional[List[str]] = None) -> Tuple[List[str], List[tuple]]:
         if columns is None:
             query = "SELECT * FROM pubmed_articles"
         else: 
@@ -89,12 +89,26 @@ class PostgresDB:
             with self.conn.cursor() as cursor: 
                 cursor.execute(query)
                 rows = cursor.fetchall()
+                colnames = [desc[0] for desc in cursor.description]
 
         except psycopg2.Error as e:
             raise RuntimeError(f"Failed to fetch data: {e}")
-      
-        return tuple(map(list, zip(*rows))) #for each element inside zip(*rows), apply list() to it
+              
+        return colnames, rows
     
+    def fetch_articles_ML(self, columns: List[str]) -> Tuple[List, ...]:
+        _, rows = self._fetch_articles(columns)
+
+        if not rows:
+            return tuple([] for _ in columns)
+        
+        return tuple(map(list, zip(*rows))) #for each element inside zip(*rows), apply list() to it
+
+    
+    def fetch_articles_JSON(self, columns: List[str]) -> List[dict]:
+        colnames, rows = self._fetch_articles(columns)
+
+        return [dict(zip(colnames, row)) for row in rows]
 
     def update_cluster_labels(self, updates: List[tuple[str, str, int]]) -> None:
         if not updates:
@@ -102,8 +116,9 @@ class PostgresDB:
         
         query = """
         UPDATE pubmed_articles as p
-        SET topic_label = data.topic_label
-        SET topic_id = data.topic_id
+        SET 
+            topic_label = data.topic_label
+            topic_id = data.topic_id
         FROM (VALUES %s) AS data(pmid, topic_label, topic_id)
         WHERE p.pmid = data.pmid
         """

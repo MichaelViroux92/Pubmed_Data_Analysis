@@ -18,24 +18,6 @@ if st.button("Search"):
     else:
         st.error(f"Error: {response.status_code}")
 
-# Elbow curve
-if st.button("Compute Elbow Curve"):
-    response = requests.get("http://fastapi-container:8000/clustering/elbow/input")
-    
-    if response.status_code == 200:
-        inertia_data = response.json()
-        inertia_values = inertia_data['inertia']
-        
-        st.write("Inertia values:", inertia_values)
-
-        plt.figure(figsize=(8, 6))
-        plt.plot(range(1, len(inertia_values) + 1), inertia_values, marker='o', linestyle='-', color='b')
-        plt.title("Elbow Curve for KMeans Clustering")
-        plt.xlabel("Number of Clusters (k)")
-        plt.ylabel("Inertia")
-        plt.grid(True)
-    else:
-        st.error(f"Failed to compute elbow curve: {response.status_code}")
 
 # Clustered labels
 # Streamlit input fields for k and num_words
@@ -82,5 +64,26 @@ if st.button("Number of articles per subtopic"):
     else:
         st.error(f"Failed  {response.status_code}")
 
+# --------------------------------------------------------------------------------
 
+"""
+# Elbow curve
+if st.button("Compute Elbow Curve"):
+    response = requests.get("http://fastapi-container:8000/clustering/elbow/input")
+    
+    if response.status_code == 200:
+        inertia_data = response.json()
+        inertia_values = inertia_data['inertia']
+        
+        st.write("Inertia values:", inertia_values)
 
+        plt.figure(figsize=(8, 6))
+        plt.plot(range(1, len(inertia_values) + 1), inertia_values, marker='o', linestyle='-', color='b')
+        plt.title("Elbow Curve for KMeans Clustering")
+        plt.xlabel("Number of Clusters (k)")
+        plt.ylabel("Inertia")
+        plt.grid(True)
+    else:
+        st.error(f"Failed to compute elbow curve: {response.status_code}")
+
+"""        

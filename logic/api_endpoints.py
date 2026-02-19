@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from pydantic import BaseModel
 from get_data.build_query import build_query
 from get_data.api_connection.pubmed_data_api import fetch_pubmed_articles
@@ -13,34 +13,40 @@ load_dotenv()
 
 app = FastAPI()
 clustering = Clustering()
-postgres = PostgresDB(
-    host=os.getenv("DB_HOST"),
-    dbname=os.getenv("DB_NAME"),
-    user=os.getenv("DB_USER"),
-    password=os.getenv("DB_PASSWORD")
-)
+
+def get_db():
+    db = PostgresDB(
+        host=os.getenv("DB_HOST"),
+        dbname=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD")
+    )
+    try:
+        yield db
+    finally:
+        db.close()
 
 
-# Searchquery endpoints
+# Searchterm query to pubmed
 class FetchData(BaseModel):
     search_term: str
 
 @app.post("/fetch_data")
-def fetch_data(req: FetchData):
+def fetch_data(req: FetchData, db: PostgresDB = Depends(get_db)):
     full_query = build_query(req.search_term)
     articles = fetch_pubmed_articles(full_query) 
-    postgres.create_table()
-    postgres.insert_articles(articles)
+    db.create_table()
+    db.insert_articles(articles)
     return {"message": "Data loaded into database"}
 
-# Topic labels
+# Topic labeling
 @app.post("/clustering/topics")
-def topic_labeling():
-    pmids, abstracts = postgres.fetch_articles(["pmid", "abstract"])
+def topic_labeling(db: PostgresDB = Depends(get_db)):
+    pmids, abstracts = db.fetch_articles_ML(["pmid", "abstract"])
     embedding_model = tm.build_embedder(EMBEDDING_MODEL)
     embedded_abstracts = tm.encode_abstracts(embedding_model, abstracts)
     topic_model = tm.build_topic_model()
-    topics, probs = topic_model.fit_transform(abstracts, embedded_abstracts)
+    topics, _ = topic_model.fit_transform(abstracts, embedded_abstracts)
     representation_model = tm.build_represenation_model()
     topic_model.update_topics(abstracts, representation_model=representation_model)
     topic_info = topic_model.get_topic_info()
@@ -50,15 +56,14 @@ def topic_labeling():
         topics=topics,
         topic_id_to_label=topic_id_to_label,
     )
-    postgres.update_cluster_labels(update_db_labels)
+    db.update_cluster_labels(update_db_labels)
     return {
         "num_topics": len(topic_info) - 1,
         "topics": topic_info.to_dict(orient='records')
     }
 
 
-
-# Get clustered dataframe
+# Fetch data for streamlit analysis
 @app.post("/labeled_dataframe")
 def get_labeled_dataframe():
     df_labeled = postgres.fetch_pubmed_data()
@@ -69,6 +74,7 @@ def get_labeled_dataframe():
 
 # ----------------------------------------------------------------------
 
+"""
 # Get inertia values for elbow curve
 @app.post("/clustering/elbow")
 def inertia_values():
@@ -98,3 +104,5 @@ def clustering_subtopics(req: SubtopicRequest):
         postgres.update_cluster_labels(pmid, cluster_name)
 
     return {"Labels": descriptive_cluster_names}
+
+"""
