@@ -5,18 +5,44 @@ import requests
 
 app = FastAPI()
 
+# Searchquery endpoints
 
-# Searchquery endpoints    
-@app.get("/search_query")
-def search_query(search_term: str):
+class FetchData(BaseModel):
+    search_term: str
+
+@app.post("/search_query")
+def search_query(req: FetchData):
     response = requests.post(
         "http://working-container:8001/fetch_data",  # Replace with Docker service name
-        json={"search_term": search_term}
+        json={"search_term": req.search_term}
+    )
+    return JSONResponse(content=response.json())
+
+
+# Get the generated topics
+@app.post("/clustering/topics/input")
+def get_clustering_subtopic_inputs():
+    response = requests.post(
+        "http://working-container:8001/clustering/topics",
+        json={}
+    )
+    return JSONResponse(content=response.json())
+
+
+# Get data for analysis
+@app.get("/labeled_data")
+def get_labeled_data():
+    response = requests.get(
+        "http://working-container:8001/labeled_data"
     )
     return JSONResponse(content=response.json())
 
 
 
+
+# ------------------------------------------------------------------------
+
+"""
 # Get inertia values for elbow curve
 @app.get("/clustering/elbow/input")
 def elbow_request():
@@ -26,22 +52,4 @@ def elbow_request():
     )
     return JSONResponse(content=response.json())
 
-
-# Get the clustered labels
-@app.get("/clustering/subtopics/input")
-def get_clustering_subtopic_inputs(k: int = 20, num_words: int = 5):
-    response = requests.post(
-        "http://working-container:8001/clustering/subtopics",
-        json={"k": k, "num_words": num_words}
-    )
-    return JSONResponse(content=response.json())
-
-
-# Get labeled dataframe
-@app.get("/labeled_data")
-def get_labeled_data():
-    response = requests.post(
-        "http://working-container:8001/labeled_dataframe",
-        json={}
-    )
-    return JSONResponse(content=response.json())
+"""

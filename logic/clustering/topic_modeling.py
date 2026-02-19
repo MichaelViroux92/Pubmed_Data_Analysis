@@ -1,4 +1,4 @@
-from config import (
+from clustering.config import (
     EMBEDDING_MODEL,
     UMAP_CONFIG,
     HDBSCAN_CONFIG,
@@ -14,8 +14,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 from dotenv import load_dotenv
 import os
 import openai
-from bertopic.representation import KeyBERTInspired, MaximalMarginalRelevance, OpenAI
-from prompts import TOPIC_LABEL_PROMPT
+from bertopic.representation import OpenAI
+from clustering.prompts import TOPIC_LABEL_PROMPT
 
 load_dotenv()
 open_api_key = os.getenv("OPENAI_API_KEY")
@@ -49,6 +49,6 @@ def build_represenation_model():
 # Mapping topics to articles
 def map_pmid_to_topic(pmids: List[str], topics: List[int], topic_id_to_label: Dict[int, str]) -> List[Tuple[str, str]]:
     return [
-         (pmid, topic_id_to_label.get(topic_id))
+         (pmid, topic_id_to_label.get(topic_id), topic_id)
          for pmid, topic_id in zip(pmids, topics)
     ]

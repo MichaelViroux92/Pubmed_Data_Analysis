@@ -3,7 +3,6 @@ from pydantic import BaseModel
 from get_data.build_query import build_query
 from get_data.api_connection.pubmed_data_api import fetch_pubmed_articles
 from db_connection.postgres import PostgresDB
-from logic.experiment.clustering import Clustering
 import os
 from dotenv import load_dotenv
 import clustering.topic_modeling as tm
@@ -12,7 +11,6 @@ from clustering.config import EMBEDDING_MODEL
 load_dotenv()
 
 app = FastAPI()
-clustering = Clustering()
 
 def get_db():
     db = PostgresDB(
@@ -64,11 +62,10 @@ def topic_labeling(db: PostgresDB = Depends(get_db)):
 
 
 # Fetch data for streamlit analysis
-@app.post("/labeled_dataframe")
-def get_labeled_dataframe():
-    df_labeled = postgres.fetch_pubmed_data()
-    df_labeled_json = df_labeled.to_dict(orient="records")
-    return {"df_labeled_key": df_labeled_json}
+@app.get("/labeled_data")
+def get_labeled_dataframe(db: PostgresDB = Depends(get_db)):
+    data = db.fetch_articles_JSON()
+    return {"labeled_data": data}
 
 
 
@@ -106,3 +103,4 @@ def clustering_subtopics(req: SubtopicRequest):
     return {"Labels": descriptive_cluster_names}
 
 """
+

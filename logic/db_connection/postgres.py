@@ -1,7 +1,7 @@
 import psycopg2
 from psycopg2.extras import execute_values
 import pandas as pd
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from get_data.api_connection.pubmed_data_api import Article
 
 class PostgresDB:
@@ -105,7 +105,7 @@ class PostgresDB:
         return tuple(map(list, zip(*rows))) #for each element inside zip(*rows), apply list() to it
 
     
-    def fetch_articles_JSON(self, columns: List[str]) -> List[dict]:
+    def fetch_articles_JSON(self, columns: Optional[List[str]] = None) -> List[dict]:
         colnames, rows = self._fetch_articles(columns)
 
         return [dict(zip(colnames, row)) for row in rows]
@@ -117,7 +117,7 @@ class PostgresDB:
         query = """
         UPDATE pubmed_articles as p
         SET 
-            topic_label = data.topic_label
+            topic_label = data.topic_label,
             topic_id = data.topic_id
         FROM (VALUES %s) AS data(pmid, topic_label, topic_id)
         WHERE p.pmid = data.pmid
